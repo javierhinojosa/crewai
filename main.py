@@ -2,16 +2,15 @@ import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from crewai import Agent
+from crewai import Agent, Task, Crew
 
-# Set your OpenAI key in the environment for CrewAI to use
 os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY", "")
 
-# Define a simple CrewAI agent
+# Define agent
 chat_agent = Agent(
     role="Conversationalist",
-    goal="Help users by chatting with them in a friendly, informative way.",
-    backstory="You are a helpful, knowledgeable AI agent always available to chat.",
+    goal="Chat with users and answer questions helpfully.",
+    backstory="You are a helpful and knowledgeable AI assistant.",
     verbose=True,
 )
 
@@ -28,6 +27,19 @@ async def chat(request: Request):
     data = await request.json()
     user_message = data.get("message", "")
 
-    # Use CrewAI agent to generate a reply
-    reply = chat_agent.chat(user_message)
-    return JSONResponse({"reply": reply})
+    # Define a Task for this chat message
+    task = Task(
+        description=user_message,
+        agent=chat_agent,
+        expected_output="A helpful, conversational response."
+    )
+
+    # Run the Crew (even if it's just one agent+task)
+    crew = Crew(
+        agents=[chat_agent],
+        tasks=[task],
+        verbose=True,
+    )
+    result = crew.kickoff()
+    return JSONResponse({"reply": result})
+
