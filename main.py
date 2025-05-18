@@ -41,5 +41,6 @@ async def chat(request: Request):
         verbose=True,
     )
     result = crew.kickoff()
-    return JSONResponse({"reply": result})
+    reply_text = str(result) if isinstance(result, str) else result.final_output
+    return JSONResponse({"reply": reply_text})
 
