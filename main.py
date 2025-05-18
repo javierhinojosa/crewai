@@ -1,10 +1,11 @@
+import openai
+
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-import openai
 import os
 
-openai.api_key = os.environ["OPENAI_API_KEY"]
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -19,10 +20,11 @@ async def chat(request: Request):
     data = await request.json()
     user_message = data.get("message", "")
 
-    response = openai.ChatCompletion.create(
+    client = openai.OpenAI(api_key=OPENAI_API_KEY)
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": user_message}],
         max_tokens=256,
     )
-    reply = response["choices"][0]["message"]["content"]
+    reply = response.choices[0].message.content
     return JSONResponse({"reply": reply})
