@@ -27,20 +27,23 @@ async def chat(request: Request):
     data = await request.json()
     user_message = data.get("message", "")
 
-    # Define a Task for this chat message
     task = Task(
         description=user_message,
         agent=chat_agent,
         expected_output="A helpful, conversational response."
     )
 
-    # Run the Crew (even if it's just one agent+task)
     crew = Crew(
         agents=[chat_agent],
         tasks=[task],
         verbose=True,
     )
     result = crew.kickoff()
-    reply_text = str(result) if isinstance(result, str) else result.final_output
+    # Robust extraction of the response
+    if hasattr(result, "output"):
+        reply_text = result.output
+    elif hasattr(result, "result"):
+        reply_text = result.result
+    else:
+        reply_text = str(result)
     return JSONResponse({"reply": reply_text})
-
