@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ChatGPT Web Chat</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+    #chat { border: 1px solid #ccc; padding: 10px; min-height: 200px; margin-bottom: 10px;}
+    .msg { margin: 5px 0; }
+    .user { color: blue; }
+    .bot { color: green; }
+    #input { width: 80%; }
+    #send { width: 15%; }
+  </style>
+</head>
+<body>
+  <h1>ChatGPT Web Chat</h1>
+  <div id="chat"></div>
+  <input id="input" autocomplete="off" placeholder="Type a message" />
+  <button id="send">Send</button>
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const send = document.getElementById('send');
+    function addMsg(who, text) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + who;
+      div.innerText = (who === 'user' ? 'You: ' : 'Bot: ') + text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    send.onclick = async function() {
+      const text = input.value;
+      if (!text.trim()) return;
+      addMsg('user', text);
+      input.value = '';
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+      });
+      const data = await res.json();
+      addMsg('bot', data.reply.trim());
+    };
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") send.onclick();
+    });
+  </script>
+</body>
+</html>
